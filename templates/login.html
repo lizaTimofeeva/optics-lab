@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вход — Лабораторная работа</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-card {
+            background: white;
+            border-radius: 16px;
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 440px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .login-card h1 {
+            text-align: center;
+            color: #1e3a5f;
+            font-size: 1.4rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .login-card .subtitle {
+            text-align: center;
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .role-toggle {
+            display: flex;
+            background: #f1f5f9;
+            border-radius: 10px;
+            padding: 4px;
+            margin-bottom: 1.5rem;
+        }
+
+        .role-toggle label {
+            flex: 1;
+            text-align: center;
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: #64748b;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .role-toggle input[type="radio"] {
+            display: none;
+        }
+
+        .role-toggle input[type="radio"]:checked + label {
+            background: #2563eb;
+            color: white;
+            box-shadow: 0 2px 8px rgba(37,99,235,0.3);
+        }
+
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.4rem;
+            color: #475569;
+            font-size: 0.95rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 0.85rem;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 0.5rem;
+        }
+
+        .btn:hover { background: #1d4ed8; }
+
+        .error {
+            background: #fef2f2;
+            color: #dc2626;
+            padding: 0.75rem;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <h1>Собирающая линза</h1>
+        <p class="subtitle">определение оптической силы<br>и фокусного расстояния</p>
+
+        {% if error %}
+        <div class="error">{{ error }}</div>
+        {% endif %}
+
+        <form method="POST" action="/">
+            <input type="hidden" name="role" id="roleInput" value="student">
+
+            <div class="role-toggle">
+                <input type="radio" name="role_toggle" id="role_student" value="student" checked>
+                <label for="role_student" onclick="switchRole('student')">Ученик</label>
+                <input type="radio" name="role_toggle" id="role_teacher" value="teacher">
+                <label for="role_teacher" onclick="switchRole('teacher')">Преподаватель</label>
+            </div>
+
+            <div id="studentFields">
+                <div class="form-group">
+                    <label for="name">ФИО:</label>
+                    <input type="text" name="name" id="name" placeholder="Иванов Иван Иванович" required>
+                </div>
+                <div class="form-group">
+                    <label for="group">Группа:</label>
+                    <input type="text" name="group" id="group" placeholder="2ИСИП-924" required>
+                </div>
+            </div>
+
+            <div id="teacherFields" class="hidden">
+                <div class="form-group">
+                    <label for="password">Пароль:</label>
+                    <input type="password" name="password" id="password" placeholder="Введите пароль">
+                </div>
+            </div>
+
+            <button type="submit" class="btn">Войти</button>
+        </form>
+    </div>
+
+    <script>
+        function switchRole(role) {
+            document.getElementById('roleInput').value = role;
+            const studentFields = document.getElementById('studentFields');
+            const teacherFields = document.getElementById('teacherFields');
+            const nameInput = document.getElementById('name');
+            const groupInput = document.getElementById('group');
+            const passwordInput = document.getElementById('password');
+
+            if (role === 'teacher') {
+                studentFields.classList.add('hidden');
+                teacherFields.classList.remove('hidden');
+                nameInput.removeAttribute('required');
+                groupInput.removeAttribute('required');
+                passwordInput.setAttribute('required', 'required');
+            } else {
+                studentFields.classList.remove('hidden');
+                teacherFields.classList.add('hidden');
+                nameInput.setAttribute('required', 'required');
+                groupInput.setAttribute('required', 'required');
+                passwordInput.removeAttribute('required');
+            }
+        }
+    </script>
+</body>
+</html>

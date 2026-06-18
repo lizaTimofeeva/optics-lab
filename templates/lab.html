@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Лабораторная — Собирающая линза</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1e293b; }
+
+        /* === ШАПКА === */
+        .header {
+            background: linear-gradient(135deg, #1e3a5f, #2563eb);
+            color: white; padding: 1.2rem 2rem;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .header h1 { font-size: 1.2rem; }
+        .header .user-info { font-size: 0.9rem; opacity: 0.85; }
+        .header a { color: #93c5fd; text-decoration: none; margin-left: 1rem; font-size: 0.85rem; }
+        .header a:hover { color: white; }
+
+        .container { max-width: 960px; margin: 0 auto; padding: 0 1rem 2rem; }
+
+        /* === ПОДСКАЗКА === */
+        .info-banner {
+            background: white; border-radius: 12px; margin: 1rem 0 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden;
+            border-left: 4px solid #f59e0b;
+        }
+        .info-header {
+            padding: 0.8rem 1.2rem; cursor: pointer; display: flex;
+            justify-content: space-between; align-items: center;
+            font-weight: 600; color: #92400e; font-size: 0.95rem;
+            user-select: none;
+        }
+        .info-header:hover { background: #fffbeb; }
+        .info-toggle { font-size: 0.8rem; transition: transform 0.3s; }
+        .info-banner.open .info-toggle { transform: rotate(180deg); }
+        .info-body {
+            display: none; padding: 0 1.2rem 1rem; color: #475569;
+            font-size: 0.9rem; line-height: 1.7;
+        }
+        .info-banner.open .info-body { display: block; }
+        .info-body ol { margin: 0.5rem 0 0.5rem 1.5rem; }
+        .info-body li { margin-bottom: 0.4rem; }
+
+        /* === ВКЛАДКИ === */
+        .tabs {
+            display: flex; gap: 0.5rem; padding: 1rem 0; flex-wrap: wrap;
+        }
+        .tab-btn {
+            padding: 0.6rem 1.5rem; border: 2px solid #e2e8f0; border-radius: 10px;
+            background: white; color: #64748b; font-size: 0.95rem; font-weight: 600;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .tab-btn:hover { border-color: #2563eb; color: #2563eb; }
+        .tab-btn.active {
+            background: #2563eb; color: white; border-color: #2563eb;
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* === КАРТОЧКИ === */
+        .card {
+            background: white; border-radius: 12px; padding: 1.5rem;
+            margin-bottom: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .card h2 { color: #1e3a5f; margin-bottom: 1rem; font-size: 1.2rem; }
+
+        /* === ФОРМА ВВОДА === */
+        .input-row { display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap; }
+        .input-row .form-group { flex: 1; min-width: 200px; }
+        .form-group label { display: block; font-weight: 600; margin-bottom: 0.4rem; color: #475569; }
+        .form-group input {
+            width: 100%; padding: 0.7rem; border: 2px solid #e2e8f0;
+            border-radius: 8px; font-size: 1rem;
+        }
+        .form-group input:focus { outline: none; border-color: #2563eb; }
+        .hint { font-size: 0.8rem; color: #94a3b8; margin-top: 0.3rem; }
+
+        .btn {
+            padding: 0.7rem 2rem; background: #2563eb; color: white; border: none;
+            border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer;
+            white-space: nowrap; transition: background 0.2s;
+        }
+        .btn:hover { background: #1d4ed8; }
+        .btn:disabled { background: #94a3b8; cursor: not-allowed; }
+
+        .btn-sm { padding: 0.5rem 1.2rem; font-size: 0.9rem; }
+
+        .btn-outline {
+            background: white; color: #2563eb; border: 2px solid #2563eb;
+        }
+        .btn-outline:hover { background: #eff6ff; }
+
+        .btn-green { background: #16a34a; }
+        .btn-green:hover { background: #15803d; }
+
+        /* === ФОРМУЛЫ === */
+        .formula-box {
+            background: #f8fafc; padding: 0.8rem 1rem; border-radius: 8px;
+            border-left: 3px solid #2563eb; margin-top: 1rem;
+            font-family: 'Cambria Math', 'Times New Roman', serif;
+            color: #475569; font-size: 0.95rem;
+        }
+
+        /* === ТАБЛИЦА РЕЗУЛЬТАТОВ === */
+        .results-table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+        .results-table th, .results-table td {
+            padding: 0.6rem 0.8rem; text-align: left; border-bottom: 1px solid #e2e8f0;
+        }
+        .results-table th { background: #f1f5f9; color: #475569; font-weight: 600; font-size: 0.9rem; }
+        .results-table td:last-child { font-weight: 600; color: #1e3a5f; }
+
+        /* === ШАГИ ВЫЧИСЛЕНИЙ === */
+        .calc-step {
+            background: #f8fafc; padding: 0.5rem 0.8rem; border-radius: 6px;
+            margin: 0.3rem 0; font-family: 'Cambria Math', serif;
+            color: #475569; font-size: 0.9rem; border-left: 3px solid #2563eb;
+        }
+
+        /* === ХАРАКТЕРИСТИКА ИЗОБРАЖЕНИЯ === */
+        .description {
+            background: #eff6ff; padding: 0.8rem; border-radius: 8px;
+            text-align: center; font-weight: 600; color: #1e40af; font-size: 1rem;
+            margin-top: 1rem;
+        }
+
+        /* === ИНТЕРАКТИВНЫЙ РИСУНОК === */
+        .diagram-container {
+            position: relative; border: 1px solid #e2e8f0; border-radius: 8px;
+            overflow: hidden; background: white; margin: 1rem 0;
+            cursor: grab; touch-action: none;
+        }
+        .diagram-container:active { cursor: grabbing; }
+        .diagram-controls {
+            display: flex; gap: 0.5rem; margin-bottom: 0.5rem;
+        }
+        .diagram-controls button {
+            padding: 0.4rem 0.8rem; border: 1px solid #e2e8f0; border-radius: 6px;
+            background: white; cursor: pointer; font-size: 0.85rem; color: #475569;
+        }
+        .diagram-controls button:hover { background: #f1f5f9; }
+
+        .error-msg { background: #fef2f2; color: #dc2626; padding: 0.8rem; border-radius: 8px; margin-top: 1rem; }
+
+        .hidden { display: none; }
+
+        /* === ВЫВОДЫ === */
+        .conclusions ul { margin: 0.8rem 0 0.8rem 1.5rem; line-height: 1.8; }
+
+        /* === ТЕСТ === */
+        .question-card {
+            background: #f8fafc; border-radius: 10px; padding: 1.2rem;
+            margin-bottom: 1rem; border: 2px solid #e2e8f0;
+            transition: border-color 0.3s;
+        }
+        .question-card.correct { border-color: #16a34a; background: #f0fdf4; }
+        .question-card.wrong { border-color: #dc2626; background: #fef2f2; }
+        .question-card h3 { font-size: 1rem; color: #1e3a5f; margin-bottom: 0.8rem; }
+        .question-card label {
+            display: block; padding: 0.5rem 0.8rem; margin: 0.3rem 0;
+            border-radius: 6px; cursor: pointer; transition: background 0.2s;
+            font-size: 0.95rem;
+        }
+        .question-card label:hover { background: #e2e8f0; }
+        .question-card input[type="radio"] { margin-right: 0.5rem; }
+        .question-card .correct-mark {
+            color: #16a34a; font-weight: 600; font-size: 0.85rem;
+            margin-top: 0.3rem;
+        }
+
+        .test-result {
+            background: #eff6ff; padding: 1rem; border-radius: 10px;
+            text-align: center; font-size: 1.2rem; font-weight: 600;
+            color: #1e40af; margin-top: 1rem;
+        }
+
+        /* === ЗАДАЧИ === */
+        .task-card {
+            background: white; border-radius: 12px; padding: 1.5rem;
+            margin-bottom: 1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border-left: 4px solid #2563eb;
+        }
+        .task-card.solved { border-left-color: #16a34a; }
+        .task-card h3 { color: #1e3a5f; font-size: 1rem; margin-bottom: 0.8rem; }
+        .task-card p { margin-bottom: 0.8rem; line-height: 1.6; color: #475569; }
+        .task-loading { color: #94a3b8; font-style: italic; }
+        .task-input-row {
+            display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;
+            margin-bottom: 0.5rem;
+        }
+        .task-input-row input {
+            padding: 0.6rem; border: 2px solid #e2e8f0; border-radius: 8px;
+            font-size: 1rem; width: 150px;
+        }
+        .task-input-row input:focus { outline: none; border-color: #2563eb; }
+        .task-input-row input:disabled { background: #f1f5f9; }
+
+        .hint-box {
+            background: #fffbeb; padding: 0.7rem 1rem; border-radius: 8px;
+            border: 1px solid #fcd34d; color: #92400e; font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        .task-status { font-size: 0.9rem; color: #64748b; margin-top: 0.3rem; }
+        .task-status.solved-status { color: #16a34a; font-weight: 600; }
+
+        .tasks-total {
+            background: #eff6ff; padding: 1rem; border-radius: 10px;
+            text-align: center; font-size: 1.1rem; font-weight: 600;
+            color: #1e40af; margin-top: 1rem;
+        }
+
+        /* === МОБИЛЬНАЯ АДАПТАЦИЯ === */
+        @media (max-width: 600px) {
+            .header { flex-direction: column; text-align: center; gap: 0.5rem; }
+            .header .user-info { font-size: 0.8rem; }
+            .input-row { flex-direction: column; }
+            .tabs { gap: 0.3rem; }
+            .tab-btn { padding: 0.5rem 1rem; font-size: 0.85rem; }
+            .task-input-row { flex-direction: column; align-items: stretch; }
+            .task-input-row input { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ==================== ШАПКА ==================== -->
+<div class="header">
+    <div>
+        <h1>Лабораторная работа: Собирающая линза</h1>
+    </div>
+    <div class="user-info">
+        {{ name }} | {{ group }}
+        <a href="/logout">Выйти</a>
+    </div>
+</div>
+
+<div class="container">
+
+    <!-- ==================== ПОДСКАЗКА ==================== -->
+    <div class="info-banner open" id="infoBanner" onclick="this.classList.toggle('open')">
+        <div class="info-header">
+            <span>&#9432; Как выполнить лабораторную работу</span>
+            <span class="info-toggle">&#9660;</span>
+        </div>
+        <div class="info-body" onclick="event.stopPropagation()">
+            <p><b>Тема:</b> Определение оптической силы и фокусного расстояния собирающей линзы</p>
+            <ol>
+                <li><b>Лабораторная:</b> Введите измеренное значение <b>d</b> (расстояние от линзы до предмета) в метрах. Сайт рассчитает f, F, D и Г, покажет пошаговые вычисления и построит ход лучей.</li>
+                <li><b>Тест:</b> Ответьте на 10 вопросов по теме и нажмите «Проверить». Тест можно пройти повторно.</li>
+                <li><b>Задачи:</b> Решите 5 расчётных задач. Без подсказки — 2 балла, с подсказкой — 1 балл. Подсказка откроется автоматически после 4 неудачных попыток.</li>
+            </ol>
+            <p style="color: #64748b; font-size: 0.85rem;">Максимум: 10 (тест) + 10 (задачи) = 20 баллов. У каждого ученика свои данные в задачах.</p>
+        </div>
+    </div>
+
+    <!-- ==================== ВКЛАДКИ ==================== -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('lab')">Лабораторная</button>
+        <button class="tab-btn" onclick="switchTab('test')">Тест</button>
+        <button class="tab-btn" onclick="switchTab('tasks')">Задачи</button>
+    </div>
+
+    <!-- ==================== ВКЛАДКА 1: ЛАБОРАТОРНАЯ ==================== -->
+    <div id="tab-lab" class="tab-content active">
+
+        <!-- Ввод данных -->
+        <div class="card">
+            <h2>Введите измеренные данные</h2>
+            <div class="input-row">
+                <div class="form-group">
+                    <label for="d_input">d — расстояние от линзы до предмета (м):</label>
+                    <input type="text" id="d_input" placeholder="Например: 0.147">
+                    <div class="hint">Введите положительное число меньше 0.450</div>
+                </div>
+                <button class="btn" id="calcBtn" onclick="doCalculation()">Рассчитать</button>
+            </div>
+
+            <div class="formula-box">
+                <b>Формулы:</b>&nbsp;
+                f = 0,450 &minus; d &nbsp;|&nbsp;
+                1/d + 1/f = 1/F &nbsp;|&nbsp;
+                D = 1/F &nbsp;|&nbsp;
+                Г = f/d
+            </div>
+
+            <div id="errorMsg" class="error-msg hidden"></div>
+        </div>
+
+        <!-- Результаты (скрыты до расчёта) -->
+        <div id="resultsSection" class="hidden">
+
+            <div class="card">
+                <h2>Результаты</h2>
+                <table class="results-table">
+                    <tr><th>Параметр</th><th>Обозначение</th><th>Значение</th></tr>
+                    <tr><td>Расстояние до предмета</td><td>d</td><td id="res_d">--</td></tr>
+                    <tr><td>Расстояние до изображения</td><td>f</td><td id="res_f">--</td></tr>
+                    <tr><td>Фокусное расстояние</td><td>F</td><td id="res_F">--</td></tr>
+                    <tr><td>Оптическая сила</td><td>D</td><td id="res_D">--</td></tr>
+                    <tr><td>Увеличение линзы</td><td>Г</td><td id="res_G">--</td></tr>
+                </table>
+            </div>
+
+            <div class="card">
+                <h2>Вычисления</h2>
+                <div class="calc-step" id="step_f"></div>
+                <div class="calc-step" id="step_F"></div>
+                <div class="calc-step" id="step_D"></div>
+                <div class="calc-step" id="step_G"></div>
+            </div>
+
+            <div class="card">
+                <h2>Ход лучей в собирающей линзе</h2>
+                <p id="caseInfo" style="font-size:0.85rem; color:#94a3b8; margin-bottom:0.5rem;"></p>
+
+                <div class="diagram-controls">
+                    <button onclick="zoomIn()">+ Приблизить</button>
+                    <button onclick="zoomOut()">&minus; Отдалить</button>
+                    <button onclick="resetZoom()">Сбросить</button>
+                </div>
+
+                <div class="diagram-container" id="diagramContainer">
+                    <canvas id="rayCanvas" width="860" height="500"></canvas>
+                </div>
+
+                <div class="description" id="imageDesc"></div>
+            </div>
+
+            <div class="card conclusions">
+                <h2>Выводы</h2>
+                <p>В ходе лабораторной работы были определены:</p>
+                <ul>
+                    <li>Фокусное расстояние собирающей линзы: <b id="conc_F">--</b></li>
+                    <li>Оптическая сила линзы: <b id="conc_D">--</b></li>
+                    <li>Увеличение линзы: <b id="conc_G">--</b></li>
+                    <li>Характеристика изображения: <b id="conc_desc">--</b></li>
+                </ul>
+                <p id="conc_text"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== ВКЛАДКА 2: ТЕСТ ==================== -->
+    <div id="tab-test" class="tab-content">
+        <div class="card">
+            <h2>Тест по теме «Собирающая линза»</h2>
+            <p style="color:#64748b; margin-bottom:1.2rem;">Ответьте на 10 вопросов и нажмите «Проверить».</p>
+
+            <div class="question-card" id="q1">
+                <h3>1. Собирающая линза — это линза, которая:</h3>
+                <label><input type="radio" name="q1" value="0"> рассеивает параллельные лучи</label>
+                <label><input type="radio" name="q1" value="1"> собирает параллельные лучи в одну точку</label>
+                <label><input type="radio" name="q1" value="2"> отражает свет обратно</label>
+                <label><input type="radio" name="q1" value="3"> не изменяет ход лучей</label>
+            </div>
+
+            <div class="question-card" id="q2">
+                <h3>2. В каких единицах измеряется оптическая сила линзы?</h3>
+                <label><input type="radio" name="q2" value="0"> метры</label>
+                <label><input type="radio" name="q2" value="1"> ньютоны</label>
+                <label><input type="radio" name="q2" value="2"> диоптрии</label>
+                <label><input type="radio" name="q2" value="3"> джоули</label>
+            </div>
+
+            <div class="question-card" id="q3">
+                <h3>3. Формула тонкой линзы:</h3>
+                <label><input type="radio" name="q3" value="0"> F = d * f</label>
+                <label><input type="radio" name="q3" value="1"> 1/F = 1/d + 1/f</label>
+                <label><input type="radio" name="q3" value="2"> F = d + f</label>
+                <label><input type="radio" name="q3" value="3"> D = d / f</label>
+            </div>
+
+            <div class="question-card" id="q4">
+                <h3>4. Если предмет расположен между фокусом и линзой (d &lt; F), изображение:</h3>
+                <label><input type="radio" name="q4" value="0"> действительное, перевёрнутое, уменьшенное</label>
+                <label><input type="radio" name="q4" value="1"> действительное, перевёрнутое, увеличенное</label>
+                <label><input type="radio" name="q4" value="2"> мнимое, прямое, увеличенное</label>
+                <label><input type="radio" name="q4" value="3"> изображение не образуется</label>
+            </div>
+
+            <div class="question-card" id="q5">
+                <h3>5. Предмет находится на расстоянии d = 0,20 м от линзы. Изображение получено на расстоянии f = 0,30 м. Чему равна оптическая сила линзы?</h3>
+                <label><input type="radio" name="q5" value="0"> 2 дптр</label>
+                <label><input type="radio" name="q5" value="1"> 5 дптр</label>
+                <label><input type="radio" name="q5" value="2"> &asymp; 8,33 дптр</label>
+                <label><input type="radio" name="q5" value="3"> 10 дптр</label>
+            </div>
+
+            <div class="question-card" id="q6">
+                <h3>6. Оптическая сила линзы D = 5 дптр. Чему равно фокусное расстояние F?</h3>
+                <label><input type="radio" name="q6" value="0"> 0,5 м</label>
+                <label><input type="radio" name="q6" value="1"> 5 м</label>
+                <label><input type="radio" name="q6" value="2"> 0,2 м</label>
+                <label><input type="radio" name="q6" value="3"> 0,05 м</label>
+            </div>
+
+            <div class="question-card" id="q7">
+                <h3>7. При каком расположении предмета собирающая линза даёт изображение, равное по размеру предмету?</h3>
+                <label><input type="radio" name="q7" value="0"> d = F</label>
+                <label><input type="radio" name="q7" value="1"> d = 2F</label>
+                <label><input type="radio" name="q7" value="2"> d &lt; F</label>
+                <label><input type="radio" name="q7" value="3"> при любом d</label>
+            </div>
+
+            <div class="question-card" id="q8">
+                <h3>8. Предмет расположен на расстоянии d = 2F от собирающей линзы. На каком расстоянии от линзы получится изображение?</h3>
+                <label><input type="radio" name="q8" value="0"> F</label>
+                <label><input type="radio" name="q8" value="1"> 2F</label>
+                <label><input type="radio" name="q8" value="2"> 3F</label>
+                <label><input type="radio" name="q8" value="3"> 4F</label>
+            </div>
+
+            <div class="question-card" id="q9">
+                <h3>9. Увеличение линзы Г = 0,5. Это означает, что изображение:</h3>
+                <label><input type="radio" name="q9" value="0"> в 2 раза больше предмета</label>
+                <label><input type="radio" name="q9" value="1"> в 2 раза меньше предмета</label>
+                <label><input type="radio" name="q9" value="2"> равно предмету по размеру</label>
+                <label><input type="radio" name="q9" value="3"> мнимое</label>
+            </div>
+
+            <div class="question-card" id="q10">
+                <h3>10. Расстояние от линзы до предмета d = 0,15 м, фокусное расстояние F = 0,10 м. Чему равно расстояние от линзы до изображения f?</h3>
+                <label><input type="radio" name="q10" value="0"> 0,10 м</label>
+                <label><input type="radio" name="q10" value="1"> 0,20 м</label>
+                <label><input type="radio" name="q10" value="2"> 0,30 м</label>
+                <label><input type="radio" name="q10" value="3"> 0,45 м</label>
+            </div>
+
+            <button class="btn" id="testSubmitBtn" onclick="submitTest()">Проверить</button>
+
+            <div id="testResult" class="test-result hidden"></div>
+        </div>
+    </div>
+
+    <!-- ==================== ВКЛАДКА 3: ЗАДАЧИ ==================== -->
+    <div id="tab-tasks" class="tab-content">
+
+        <!-- Задача 1 -->
+        <div class="task-card" id="task-card-1">
+            <h3>Задача 1</h3>
+            <p id="task-text-1" class="task-loading">Загрузка условия...</p>
+            <div class="task-input-row">
+                <input type="text" id="task-input-1" placeholder="Ответ">
+                <button class="btn btn-sm" onclick="checkTask(1)">Проверить</button>
+                <button class="btn btn-sm btn-outline" onclick="showHint(1)">Подсказка</button>
+            </div>
+            <div id="task-hint-1" class="hint-box hidden">f = L &minus; d</div>
+            <div id="task-status-1" class="task-status"></div>
+        </div>
+
+        <!-- Задача 2 -->
+        <div class="task-card" id="task-card-2">
+            <h3>Задача 2</h3>
+            <p id="task-text-2" class="task-loading">Загрузка условия...</p>
+            <div class="task-input-row">
+                <input type="text" id="task-input-2" placeholder="Ответ">
+                <button class="btn btn-sm" onclick="checkTask(2)">Проверить</button>
+                <button class="btn btn-sm btn-outline" onclick="showHint(2)">Подсказка</button>
+            </div>
+            <div id="task-hint-2" class="hint-box hidden">D = 1 / F</div>
+            <div id="task-status-2" class="task-status"></div>
+        </div>
+
+        <!-- Задача 3 -->
+        <div class="task-card" id="task-card-3">
+            <h3>Задача 3</h3>
+            <p id="task-text-3" class="task-loading">Загрузка условия...</p>
+            <div class="task-input-row">
+                <input type="text" id="task-input-3" placeholder="Ответ">
+                <button class="btn btn-sm" onclick="checkTask(3)">Проверить</button>
+                <button class="btn btn-sm btn-outline" onclick="showHint(3)">Подсказка</button>
+            </div>
+            <div id="task-hint-3" class="hint-box hidden">Используйте формулу 1/F = 1/d + 1/f</div>
+            <div id="task-status-3" class="task-status"></div>
+        </div>
+
+        <!-- Задача 4 -->
+        <div class="task-card" id="task-card-4">
+            <h3>Задача 4</h3>
+            <p id="task-text-4" class="task-loading">Загрузка условия...</p>
+            <div class="task-input-row">
+                <input type="text" id="task-input-4" placeholder="Ответ">
+                <button class="btn btn-sm" onclick="checkTask(4)">Проверить</button>
+                <button class="btn btn-sm btn-outline" onclick="showHint(4)">Подсказка</button>
+            </div>
+            <div id="task-hint-4" class="hint-box hidden">Г = f / d</div>
+            <div id="task-status-4" class="task-status"></div>
+        </div>
+
+        <!-- Задача 5 -->
+        <div class="task-card" id="task-card-5">
+            <h3>Задача 5</h3>
+            <p id="task-text-5" class="task-loading">Загрузка условия...</p>
+            <div class="task-input-row">
+                <input type="text" id="task-input-5" placeholder="Ответ">
+                <button class="btn btn-sm" onclick="checkTask(5)">Проверить</button>
+                <button class="btn btn-sm btn-outline" onclick="showHint(5)">Подсказка</button>
+            </div>
+            <div id="task-hint-5" class="hint-box hidden">Сначала найдите f = L &minus; d, затем 1/F = 1/d + 1/f, и D = 1/F</div>
+            <div id="task-status-5" class="task-status"></div>
+        </div>
+
+        <div id="tasksTotal" class="tasks-total">Решено 0 из 5 задач</div>
+    </div>
+
+</div>
+
+<!-- ==================== JAVASCRIPT ==================== -->
+<script>
+/**
+ * ==================== ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК ====================
+ */
+function switchTab(tabName) {
+    document.querySelectorAll('.tab-content').forEach(function(el) {
+        el.classList.remove('active');
+    });
+    document.querySelectorAll('.tab-btn').forEach(function(el) {
+        el.classList.remove('active');
+    });
+    document.getElementById('tab-' + tabName).classList.add('active');
+    var btns = document.querySelectorAll('.tab-btn');
+    var tabIndex = { 'lab': 0, 'test': 1, 'tasks': 2 };
+    if (tabIndex[tabName] !== undefined) {
+        btns[tabIndex[tabName]].classList.add('active');
+    }
+}
+
+
+/**
+ * ==================== ЛАБОРАТОРНАЯ (вкладка 1) ====================
+ */
+var currentScale = 1;
+var offsetX = 0, offsetY = 0;
+var isDragging = false;
+var dragStartX, dragStartY;
+var lastResult = null;
+
+async function doCalculation() {
+    var dInput = document.getElementById('d_input').value.trim();
+    var errorDiv = document.getElementById('errorMsg');
+    var resultsDiv = document.getElementById('resultsSection');
+
+    errorDiv.classList.add('hidden');
+
+    if (!dInput) {
+        showError('Введите значение d');
+        return;
+    }
+
+    try {
+        var response = await fetch('/api/calc', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ d: dInput })
+        });
+
+        var data = await response.json();
+
+        if (data.error) {
+            showError(data.error);
+            resultsDiv.classList.add('hidden');
+            return;
+        }
+
+        lastResult = data;
+        displayResults(data);
+        resultsDiv.classList.remove('hidden');
+
+        resetZoom();
+        drawRayDiagram(data);
+
+    } catch (err) {
+        showError('Ошибка сервера: ' + err.message);
+    }
+}
+
+function showError(msg) {
+    var el = document.getElementById('errorMsg');
+    el.textContent = msg;
+    el.classList.remove('hidden');
+}
+
+function displayResults(r) {
+    document.getElementById('res_d').textContent = r.d + ' м';
+    document.getElementById('res_f').textContent = r.f + ' м';
+    document.getElementById('res_F').textContent = r.F + ' м';
+    document.getElementById('res_D').textContent = r.D + ' дптр';
+    document.getElementById('res_G').textContent = r.G;
+
+    document.getElementById('step_f').textContent = r.steps.f;
+    document.getElementById('step_F').textContent = r.steps.F;
+    document.getElementById('step_D').textContent = r.steps.D;
+    document.getElementById('step_G').textContent = r.steps.G;
+
+    var caseText = r.d_gt_F
+        ? 'Случай d > F (предмет за фокусом). Масштаб: 4 клетки = 0,1 м.'
+        : 'Случай d < F (предмет между линзой и фокусом). Масштаб: 4 клетки = 0,1 м.';
+    document.getElementById('caseInfo').textContent = caseText;
+
+    document.getElementById('imageDesc').textContent = 'Изображение — ' + r.desc;
+
+    document.getElementById('conc_F').textContent = 'F = ' + r.F + ' м';
+    document.getElementById('conc_D').textContent = 'D = ' + r.D + ' дптр';
+    document.getElementById('conc_G').textContent = 'Г = ' + r.G;
+    document.getElementById('conc_desc').textContent = r.desc;
+    document.getElementById('conc_text').textContent =
+        'Построен ход лучей для случая d ' + (r.d_gt_F ? '>' : '<') +
+        ' F. Результаты соответствуют теоретическим представлениям о формировании изображения собирающей линзой.';
+}
+
+
+/**
+ * ==================== РИСОВАНИЕ НА CANVAS ====================
+ */
+function drawRayDiagram(r) {
+    var canvas = document.getElementById('rayCanvas');
+    var ctx = canvas.getContext('2d');
+
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    ctx.setTransform(currentScale, 0, 0, currentScale, offsetX, offsetY);
+
+    var W = canvas.width;
+    var H = canvas.height;
+    var centerX = W / 2;
+    var centerY = H / 2;
+
+    var pxPerM = 1200;
+
+    var d = r.d, f = r.f, F = r.F;
+
+    ctx.strokeStyle = '#f0f0f0';
+    ctx.lineWidth = 0.5;
+    for (var x = 0; x < W; x += 30) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+    for (var y = 0; y < H; y += 30) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, centerY);
+    ctx.lineTo(W, centerY);
+    ctx.stroke();
+
+    ctx.strokeStyle = '#2563eb';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(centerX, centerY - 120);
+    ctx.lineTo(centerX, centerY + 120);
+    ctx.stroke();
+    drawArrowHead(ctx, centerX, centerY - 120, 'up', '#2563eb');
+    drawArrowHead(ctx, centerX, centerY + 120, 'down', '#2563eb');
+
+    var fPx = F * pxPerM;
+    ctx.fillStyle = '#dc2626';
+    ctx.beginPath(); ctx.arc(centerX - fPx, centerY, 5, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(centerX + fPx, centerY, 5, 0, Math.PI * 2); ctx.fill();
+    ctx.font = '14px Segoe UI';
+    ctx.fillStyle = '#dc2626';
+    ctx.fillText('F', centerX - fPx - 5, centerY + 20);
+    ctx.fillText('F', centerX + fPx - 5, centerY + 20);
+
+    ctx.fillStyle = '#333';
+    ctx.font = 'bold 14px Segoe UI';
+    ctx.fillText('O', centerX + 5, centerY + 20);
+
+    if (r.d_gt_F) {
+        var objH = 80;
+        var objX = centerX - d * pxPerM;
+        var imgX = centerX + f * pxPerM;
+        var imgH = -objH * (f / d);
+
+        ctx.strokeStyle = '#16a34a'; ctx.lineWidth = 2.5;
+        drawLine(ctx, objX, centerY, objX, centerY - objH);
+        drawArrowHead(ctx, objX, centerY - objH, 'up', '#16a34a');
+        ctx.fillStyle = '#16a34a'; ctx.font = 'bold 14px Segoe UI';
+        ctx.fillText('A', objX - 18, centerY - objH - 5);
+        ctx.fillText('B', objX - 18, centerY + 18);
+
+        ctx.strokeStyle = '#7c3aed'; ctx.lineWidth = 2.5;
+        drawLine(ctx, imgX, centerY, imgX, centerY - imgH);
+        drawArrowHead(ctx, imgX, centerY - imgH, imgH < 0 ? 'up' : 'down', '#7c3aed');
+        ctx.fillStyle = '#7c3aed'; ctx.font = 'bold 14px Segoe UI';
+        ctx.fillText("A'", imgX + 5, centerY - imgH + (imgH > 0 ? -5 : 18));
+        ctx.fillText("B'", imgX + 5, centerY + 18);
+
+        ctx.strokeStyle = '#dc2626'; ctx.lineWidth = 1.5;
+        drawLine(ctx, objX, centerY - objH, centerX, centerY - objH);
+        drawLine(ctx, centerX, centerY - objH, imgX, centerY - imgH);
+
+        ctx.strokeStyle = '#ea580c'; ctx.lineWidth = 1.5;
+        drawLine(ctx, objX, centerY - objH, imgX, centerY - imgH);
+
+        ctx.fillStyle = '#64748b'; ctx.font = '12px Segoe UI';
+        ctx.fillText('d = ' + d + ' м', (objX + centerX) / 2 - 30, centerY + 35);
+        ctx.fillText('f = ' + f + ' м', (centerX + imgX) / 2 - 30, centerY + 35);
+
+    } else {
+        var objH2 = 50;
+        var objX2 = centerX - d * pxPerM;
+        var imgX2 = centerX - Math.abs(f) * pxPerM;
+        var imgH2 = objH2 * Math.abs(f / d);
+
+        ctx.strokeStyle = '#16a34a'; ctx.lineWidth = 2.5;
+        drawLine(ctx, objX2, centerY, objX2, centerY - objH2);
+        drawArrowHead(ctx, objX2, centerY - objH2, 'up', '#16a34a');
+        ctx.fillStyle = '#16a34a'; ctx.font = 'bold 14px Segoe UI';
+        ctx.fillText('A', objX2 - 18, centerY - objH2 - 5);
+        ctx.fillText('B', objX2 - 18, centerY + 18);
+
+        ctx.strokeStyle = '#7c3aed'; ctx.lineWidth = 2;
+        ctx.setLineDash([6, 4]);
+        drawLine(ctx, imgX2, centerY, imgX2, centerY - imgH2);
+        ctx.setLineDash([]);
+        ctx.fillStyle = '#7c3aed'; ctx.font = 'bold 14px Segoe UI';
+        ctx.fillText("A'", imgX2 - 25, centerY - imgH2 - 5);
+
+        ctx.fillStyle = '#64748b'; ctx.font = '12px Segoe UI';
+        ctx.fillText('d = ' + d + ' м', (objX2 + centerX) / 2 - 20, centerY + 35);
+    }
+}
+
+function drawLine(ctx, x1, y1, x2, y2) {
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+}
+
+function drawArrowHead(ctx, x, y, dir, color) {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    var s = 8;
+    if (dir === 'up') {
+        ctx.moveTo(x, y - 2); ctx.lineTo(x - s, y + s); ctx.lineTo(x + s, y + s);
+    } else {
+        ctx.moveTo(x, y + 2); ctx.lineTo(x - s, y - s); ctx.lineTo(x + s, y - s);
+    }
+    ctx.closePath(); ctx.fill();
+}
+
+function zoomIn()  { currentScale *= 1.3; if (lastResult) drawRayDiagram(lastResult); }
+function zoomOut() { currentScale /= 1.3; if (lastResult) drawRayDiagram(lastResult); }
+function resetZoom() { currentScale = 1; offsetX = 0; offsetY = 0; if (lastResult) drawRayDiagram(lastResult); }
+
+var container = document.getElementById('diagramContainer');
+
+container.addEventListener('mousedown', function(e) {
+    isDragging = true;
+    dragStartX = e.clientX - offsetX;
+    dragStartY = e.clientY - offsetY;
+});
+container.addEventListener('mousemove', function(e) {
+    if (!isDragging) return;
+    offsetX = e.clientX - dragStartX;
+    offsetY = e.clientY - dragStartY;
+    if (lastResult) drawRayDiagram(lastResult);
+});
+container.addEventListener('mouseup', function() { isDragging = false; });
+container.addEventListener('mouseleave', function() { isDragging = false; });
+
+var lastTouchDist = 0;
+container.addEventListener('touchstart', function(e) {
+    if (e.touches.length === 1) {
+        isDragging = true;
+        dragStartX = e.touches[0].clientX - offsetX;
+        dragStartY = e.touches[0].clientY - offsetY;
+    }
+    if (e.touches.length === 2) {
+        isDragging = false;
+        lastTouchDist = Math.hypot(
+            e.touches[0].clientX - e.touches[1].clientX,
+            e.touches[0].clientY - e.touches[1].clientY
+        );
+    }
+}, { passive: false });
+container.addEventListener('touchmove', function(e) {
+    e.preventDefault();
+    if (e.touches.length === 1 && isDragging) {
+        offsetX = e.touches[0].clientX - dragStartX;
+        offsetY = e.touches[0].clientY - dragStartY;
+        if (lastResult) drawRayDiagram(lastResult);
+    }
+    if (e.touches.length === 2) {
+        var dist = Math.hypot(
+            e.touches[0].clientX - e.touches[1].clientX,
+            e.touches[0].clientY - e.touches[1].clientY
+        );
+        if (lastTouchDist > 0) {
+            currentScale *= dist / lastTouchDist;
+            currentScale = Math.max(0.3, Math.min(5, currentScale));
+            if (lastResult) drawRayDiagram(lastResult);
+        }
+        lastTouchDist = dist;
+    }
+}, { passive: false });
+container.addEventListener('touchend', function() { isDragging = false; lastTouchDist = 0; });
+
+container.addEventListener('wheel', function(e) {
+    e.preventDefault();
+    if (e.deltaY < 0) { currentScale *= 1.1; } else { currentScale /= 1.1; }
+    currentScale = Math.max(0.3, Math.min(5, currentScale));
+    if (lastResult) drawRayDiagram(lastResult);
+});
+
+document.getElementById('d_input').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') doCalculation();
+});
+
+
+/**
+ * ==================== ТЕСТ (вкладка 2) ====================
+ */
+var testSubmitted = false;
+
+async function submitTest() {
+    if (testSubmitted) return;
+
+    var answers = [];
+    for (var i = 1; i <= 10; i++) {
+        var selected = document.querySelector('input[name="q' + i + '"]:checked');
+        answers.push(selected ? parseInt(selected.value) : -1);
+    }
+
+    if (answers.indexOf(-1) !== -1) {
+        alert('Ответьте на все вопросы перед отправкой.');
+        return;
+    }
+
+    try {
+        var response = await fetch('/api/test', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ answers: answers })
+        });
+
+        var data = await response.json();
+        testSubmitted = true;
+
+        var resultDiv = document.getElementById('testResult');
+        resultDiv.textContent = 'Результат: ' + data.score + ' из ' + data.total;
+        resultDiv.classList.remove('hidden');
+
+        var correct = data.correct;
+        for (var j = 1; j <= 10; j++) {
+            var card = document.getElementById('q' + j);
+            var radios = document.querySelectorAll('input[name="q' + j + '"]');
+            radios.forEach(function(r) { r.disabled = true; });
+
+            if (answers[j - 1] === correct[j - 1]) {
+                card.classList.add('correct');
+            } else {
+                card.classList.add('wrong');
+                var mark = document.createElement('div');
+                mark.className = 'correct-mark';
+                mark.textContent = 'Правильный ответ: вариант ' + (correct[j - 1] + 1);
+                card.appendChild(mark);
+            }
+        }
+
+        var btn = document.getElementById('testSubmitBtn');
+        btn.textContent = 'Пройти ещё раз';
+        btn.onclick = function() { resetTest(); };
+
+    } catch (err) {
+        alert('Ошибка отправки теста: ' + err.message);
+    }
+}
+
+function resetTest() {
+    testSubmitted = false;
+    for (var j = 1; j <= 10; j++) {
+        var card = document.getElementById('q' + j);
+        card.classList.remove('correct', 'wrong');
+        var marks = card.querySelectorAll('.correct-mark');
+        marks.forEach(function(m) { m.remove(); });
+        var radios = document.querySelectorAll('input[name="q' + j + '"]');
+        radios.forEach(function(r) { r.disabled = false; r.checked = false; });
+    }
+    document.getElementById('testResult').classList.add('hidden');
+    var btn = document.getElementById('testSubmitBtn');
+    btn.textContent = 'Проверить';
+    btn.onclick = function() { submitTest(); };
+}
+
+
+/**
+ * ==================== ЗАДАЧИ (вкладка 3) ====================
+ */
+var taskAttempts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+var taskSolved = { 1: false, 2: false, 3: false, 4: false, 5: false };
+var hintUsed = { 1: false, 2: false, 3: false, 4: false, 5: false };
+
+/**
+ * Форматирует число: заменяет точку на запятую
+ */
+function fmt(val) {
+    return String(val).replace('.', ',');
+}
+
+/**
+ * Загружает случайные параметры задач с сервера и вставляет условия
+ */
+async function loadTaskParams() {
+    try {
+        var response = await fetch('/api/task_params');
+        var data = await response.json();
+        if (data.error) {
+            console.error(data.error);
+            return;
+        }
+
+        // Задача 1: найти f = L - d
+        var p1 = data['1'];
+        document.getElementById('task-text-1').innerHTML =
+            'Расстояние от предмета до экрана L = <b>' + fmt(p1.L) + '</b> м. ' +
+            'Расстояние от линзы до предмета d = <b>' + fmt(p1.d) + '</b> м. ' +
+            'Найдите расстояние от линзы до изображения f (в метрах).';
+        document.getElementById('task-text-1').classList.remove('task-loading');
+
+        // Задача 2: найти D = 1/F
+        var p2 = data['2'];
+        document.getElementById('task-text-2').innerHTML =
+            'Фокусное расстояние линзы F = <b>' + fmt(p2.F) + '</b> м. ' +
+            'Найдите оптическую силу D (в диоптриях).';
+        document.getElementById('task-text-2').classList.remove('task-loading');
+
+        // Задача 3: найти F
+        var p3 = data['3'];
+        document.getElementById('task-text-3').innerHTML =
+            'Расстояние от линзы до предмета d = <b>' + fmt(p3.d) + '</b> м, ' +
+            'до изображения f = <b>' + fmt(p3.f) + '</b> м. ' +
+            'Найдите фокусное расстояние F (в метрах). Ответ округлите до сотых.';
+        document.getElementById('task-text-3').classList.remove('task-loading');
+
+        // Задача 4: найти Г
+        var p4 = data['4'];
+        document.getElementById('task-text-4').innerHTML =
+            'Расстояние от линзы до предмета d = <b>' + fmt(p4.d) + '</b> м, ' +
+            'до изображения f = <b>' + fmt(p4.f) + '</b> м. ' +
+            'Найдите увеличение Г линзы.';
+        document.getElementById('task-text-4').classList.remove('task-loading');
+
+        // Задача 5: найти D
+        var p5 = data['5'];
+        document.getElementById('task-text-5').innerHTML =
+            'Расстояние от предмета до экрана L = <b>' + fmt(p5.L) + '</b> м, ' +
+            'расстояние от линзы до предмета d = <b>' + fmt(p5.d) + '</b> м. ' +
+            'Найдите оптическую силу D (в диоптриях). Ответ округлите до сотых.';
+        document.getElementById('task-text-5').classList.remove('task-loading');
+
+    } catch (err) {
+        console.error('Ошибка загрузки параметров задач:', err);
+    }
+}
+
+// Загружаем параметры задач при открытии страницы
+loadTaskParams();
+
+
+async function checkTask(taskNum) {
+    if (taskSolved[taskNum]) return;
+
+    var input = document.getElementById('task-input-' + taskNum);
+    var answer = input.value.trim();
+
+    if (!answer) {
+        alert('Введите ответ');
+        return;
+    }
+
+    try {
+        var response = await fetch('/api/task', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ task: taskNum, answer: answer, hint_used: hintUsed[taskNum] })
+        });
+
+        var data = await response.json();
+        taskAttempts[taskNum]++;
+
+        var statusEl = document.getElementById('task-status-' + taskNum);
+
+        if (data.correct) {
+            taskSolved[taskNum] = true;
+            var points = hintUsed[taskNum] ? 1 : 2;
+            statusEl.textContent = 'Решено ✓ (' + points + ' б.)';
+            statusEl.className = 'task-status solved-status';
+            input.disabled = true;
+            input.style.borderColor = '#16a34a';
+            document.getElementById('task-card-' + taskNum).classList.add('solved');
+        } else {
+            statusEl.textContent = 'Попытка ' + taskAttempts[taskNum] + ' — неверно';
+            statusEl.className = 'task-status';
+
+            if (taskAttempts[taskNum] >= 4) {
+                showHint(taskNum);
+            }
+        }
+
+        updateTasksTotal();
+
+    } catch (err) {
+        alert('Ошибка: ' + err.message);
+    }
+}
+
+function showHint(taskNum) {
+    document.getElementById('task-hint-' + taskNum).classList.remove('hidden');
+    hintUsed[taskNum] = true;
+}
+
+function updateTasksTotal() {
+    var solved = 0;
+    var points = 0;
+    for (var i = 1; i <= 5; i++) {
+        if (taskSolved[i]) {
+            solved++;
+            points += hintUsed[i] ? 1 : 2;
+        }
+    }
+    document.getElementById('tasksTotal').textContent =
+        'Решено ' + solved + ' из 5 задач (' + points + ' из 10 баллов, макс. 20 с тестом)';
+}
+</script>
+
+</body>
+</html>

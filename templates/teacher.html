@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Панель преподавателя</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1e293b; }
+
+        .header {
+            background: linear-gradient(135deg, #1e3a5f, #2563eb);
+            color: white; padding: 1.2rem 2rem;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .header h1 { font-size: 1.2rem; }
+        .header .user-info { font-size: 0.9rem; opacity: 0.85; }
+        .header a { color: #93c5fd; text-decoration: none; margin-left: 1rem; font-size: 0.85rem; }
+        .header a:hover { color: white; }
+
+        .container { max-width: 1200px; margin: 1.5rem auto; padding: 0 1rem; }
+
+        .card {
+            background: white; border-radius: 12px; padding: 1.5rem;
+            margin-bottom: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .card h2 { color: #1e3a5f; margin-bottom: 1rem; font-size: 1.2rem; }
+
+        .no-data { text-align: center; color: #94a3b8; padding: 2rem; }
+
+        /* === ФИЛЬТРЫ === */
+        .filter-bar {
+            display: flex; gap: 0.8rem; flex-wrap: wrap;
+            margin-bottom: 1.2rem; align-items: flex-end;
+        }
+        .filter-group { display: flex; flex-direction: column; gap: 0.3rem; }
+        .filter-group label {
+            font-size: 0.8rem; color: #64748b; font-weight: 600;
+        }
+        .filter-group input, .filter-group select {
+            padding: 0.5rem 0.7rem; border: 2px solid #e2e8f0; border-radius: 8px;
+            font-size: 0.9rem; background: white; min-width: 140px;
+        }
+        .filter-group input:focus, .filter-group select:focus {
+            outline: none; border-color: #2563eb;
+        }
+        .filter-reset {
+            padding: 0.5rem 1rem; background: #f1f5f9; border: 2px solid #e2e8f0;
+            border-radius: 8px; font-size: 0.85rem; color: #64748b; cursor: pointer;
+            font-weight: 600;
+        }
+        .filter-reset:hover { background: #e2e8f0; }
+        .filter-count {
+            font-size: 0.85rem; color: #64748b; padding: 0.5rem 0;
+        }
+
+        /* === КАРТОЧКИ УЧЕНИКОВ === */
+        .student-card {
+            border: 1px solid #e2e8f0; border-radius: 10px; padding: 1rem;
+            margin-bottom: 1rem; background: #fafbfc;
+        }
+        .student-header {
+            display: flex; justify-content: space-between; align-items: center;
+            cursor: pointer; flex-wrap: wrap; gap: 0.5rem;
+        }
+        .student-name { font-weight: 700; color: #1e3a5f; font-size: 1rem; }
+        .student-group { color: #64748b; font-size: 0.9rem; }
+        .student-date { color: #94a3b8; font-size: 0.8rem; margin-left: 0.5rem; }
+        .student-score {
+            background: #eff6ff; color: #1e40af; font-weight: 700;
+            padding: 0.3rem 0.8rem; border-radius: 8px; font-size: 0.9rem;
+        }
+        .student-details { display: none; margin-top: 1rem; }
+        .student-card.open .student-details { display: block; }
+        .student-card.open { background: white; border-color: #2563eb; }
+
+        .detail-section { margin-bottom: 1rem; }
+        .detail-section h4 {
+            color: #475569; font-size: 0.9rem; margin-bottom: 0.4rem;
+            border-bottom: 1px solid #e2e8f0; padding-bottom: 0.3rem;
+        }
+        .attempt {
+            background: #f8fafc; padding: 0.4rem 0.7rem; border-radius: 6px;
+            margin: 0.3rem 0; font-size: 0.85rem; color: #475569;
+            border-left: 3px solid #94a3b8;
+        }
+        .attempt.good { border-left-color: #16a34a; }
+        .attempt.bad { border-left-color: #dc2626; }
+        .attempt.hint { border-left-color: #f59e0b; }
+        .task-values { color: #94a3b8; font-size: 0.8rem; margin-left: 0.3rem; }
+
+        /* === СВОРАЧИВАЕМЫЙ ПАРОЛЬ === */
+        .pass-toggle {
+            color: #64748b; cursor: pointer; font-size: 0.9rem;
+            display: inline-flex; align-items: center; gap: 0.3rem;
+            padding: 0.5rem 0; user-select: none;
+        }
+        .pass-toggle:hover { color: #2563eb; }
+        .pass-form { display: none; margin-top: 0.8rem; max-width: 320px; }
+        .pass-form.open { display: block; }
+        .pass-form input {
+            width: 100%; padding: 0.5rem; border: 2px solid #e2e8f0;
+            border-radius: 8px; font-size: 0.9rem; margin-bottom: 0.5rem;
+        }
+        .pass-form input:focus { outline: none; border-color: #2563eb; }
+        .btn-sm {
+            padding: 0.5rem 1.2rem; background: #2563eb; color: white; border: none;
+            border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer;
+        }
+        .btn-sm:hover { background: #1d4ed8; }
+        .msg {
+            padding: 0.5rem; border-radius: 6px; margin-top: 0.5rem;
+            font-size: 0.85rem; text-align: center;
+        }
+        .msg-success { background: #f0fdf4; color: #16a34a; }
+        .msg-error { background: #fef2f2; color: #dc2626; }
+        .hidden { display: none; }
+
+        @media (max-width: 600px) {
+            .header { flex-direction: column; text-align: center; gap: 0.5rem; }
+            .filter-bar { flex-direction: column; }
+            .filter-group input, .filter-group select { min-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div><h1>Панель преподавателя</h1></div>
+    <div class="user-info">
+        {{ name }}
+        <a href="/logout">Выйти</a>
+    </div>
+</div>
+
+<div class="container">
+
+    <div class="card">
+        <h2>Результаты учеников</h2>
+
+        <!-- Фильтры -->
+        <div class="filter-bar">
+            <div class="filter-group">
+                <label>Поиск по ФИО</label>
+                <input type="text" id="filterName" placeholder="Фамилия..." oninput="applyFilters()">
+            </div>
+            <div class="filter-group">
+                <label>Группа</label>
+                <select id="filterGroup" onchange="applyFilters()">
+                    <option value="">Все группы</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Дата</label>
+                <input type="date" id="filterDate" onchange="applyFilters()">
+            </div>
+            <div class="filter-group">
+                <label>Сортировка</label>
+                <select id="sortBy" onchange="applyFilters()">
+                    <option value="date">По дате (новые)</option>
+                    <option value="name">По фамилии (А-Я)</option>
+                    <option value="score_desc">По баллам (макс)</option>
+                </select>
+            </div>
+            <button class="filter-reset" onclick="resetFilters()">Сбросить</button>
+        </div>
+        <div class="filter-count" id="filterCount"></div>
+
+        {% if students|length > 0 %}
+            <div id="studentsList">
+            {% for s in students %}
+            {% set lab = s['lab_data'] | from_json if s['lab_data'] else [] %}
+            {% set lab_list = lab if lab is iterable and lab is not mapping else [lab] if lab else [] %}
+            {% set tests = s['test_answers'] | from_json if s['test_answers'] else [] %}
+            {% set test_list = tests if tests is iterable and tests is not mapping else [] %}
+            {% set tr_data = s['task_results'] | from_json if s['task_results'] else {} %}
+            {% set tp = s['task_params'] | from_json if s['task_params'] else {} %}
+
+            {% set test_pts = s['test_score'] if s['test_score'] is not none else 0 %}
+            {% set task_pts = [0] %}
+            {% for i in range(1, 6) %}
+                {% set key = i | string %}
+                {% if key in tr_data and tr_data[key].solved %}
+                    {% if tr_data[key].hint_used is defined and tr_data[key].hint_used %}
+                        {% if task_pts.append(task_pts.pop() + 1) %}{% endif %}
+                    {% else %}
+                        {% if task_pts.append(task_pts.pop() + 2) %}{% endif %}
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+
+            <div class="student-card"
+                 data-name="{{ s['name'] }}"
+                 data-group="{{ s['grp'] }}"
+                 data-date="{{ s['created_at'].strftime('%Y-%m-%d') if s['created_at'] else '' }}"
+                 data-score="{{ test_pts + task_pts[0] }}"
+                 onclick="this.classList.toggle('open')">
+
+                <div class="student-header">
+                    <div>
+                        <span class="student-name">{{ s['name'] }}</span>
+                        <span class="student-group">| {{ s['grp'] }}</span>
+                        <span class="student-date">{{ s['created_at'].strftime('%d.%m.%Y %H:%M') if s['created_at'] else '' }}</span>
+                    </div>
+                    <span class="student-score">{{ test_pts + task_pts[0] }} / 20</span>
+                </div>
+
+                <div class="student-details" onclick="event.stopPropagation()">
+
+                    <!-- Лабораторная -->
+                    <div class="detail-section">
+                        <h4>Лабораторная (введённые значения d)</h4>
+                        {% if lab_list|length > 0 and lab_list[0] %}
+                            {% for entry in lab_list %}
+                            <div class="attempt good">
+                                {% if entry is mapping %}
+                                d = {{ entry.d }} м &rarr; F = {{ entry.F }} м, D = {{ entry.D }} дптр, Г = {{ entry.G }}
+                                {% else %}
+                                {{ entry }}
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="attempt">Не выполнена</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Тест -->
+                    <div class="detail-section">
+                        <h4>Тест (попытки)</h4>
+                        {% if test_list|length > 0 and test_list[0] is mapping %}
+                            {% for t in test_list %}
+                            <div class="attempt {{ 'good' if t.score >= 8 else 'bad' if t.score <= 4 else '' }}">
+                                Попытка {{ loop.index }}: {{ t.score }}/10
+                            </div>
+                            {% endfor %}
+                        {% elif s['test_score'] is not none %}
+                            <div class="attempt">Результат: {{ s['test_score'] }}/10</div>
+                        {% else %}
+                            <div class="attempt">Не пройден</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Задачи -->
+                    <div class="detail-section">
+                        <h4>Задачи</h4>
+                        {% for i in range(1, 6) %}
+                            {% set key = i | string %}
+                            {% set tp_task = tp[key] if key in tp else {} %}
+                            {% if key in tr_data %}
+                                {% set t = tr_data[key] %}
+                                {% if t.solved %}
+                                    {% if t.hint_used is defined and t.hint_used %}
+                                    <div class="attempt hint">
+                                        №{{ i }}: решена с подсказкой (попыток: {{ t.attempts }}) — 1 балл
+                                        {% if tp_task %}
+                                        <span class="task-values">
+                                            {% if i == 1 %}[L={{ tp_task.L }}, d={{ tp_task.d }}]{% endif %}
+                                            {% if i == 2 %}[F={{ tp_task.F }}]{% endif %}
+                                            {% if i == 3 %}[d={{ tp_task.d }}, f={{ tp_task.f }}]{% endif %}
+                                            {% if i == 4 %}[d={{ tp_task.d }}, f={{ tp_task.f }}]{% endif %}
+                                            {% if i == 5 %}[L={{ tp_task.L }}, d={{ tp_task.d }}]{% endif %}
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                    {% else %}
+                                    <div class="attempt good">
+                                        №{{ i }}: решена самостоятельно (попыток: {{ t.attempts }}) — 2 балла
+                                        {% if tp_task %}
+                                        <span class="task-values">
+                                            {% if i == 1 %}[L={{ tp_task.L }}, d={{ tp_task.d }}]{% endif %}
+                                            {% if i == 2 %}[F={{ tp_task.F }}]{% endif %}
+                                            {% if i == 3 %}[d={{ tp_task.d }}, f={{ tp_task.f }}]{% endif %}
+                                            {% if i == 4 %}[d={{ tp_task.d }}, f={{ tp_task.f }}]{% endif %}
+                                            {% if i == 5 %}[L={{ tp_task.L }}, d={{ tp_task.d }}]{% endif %}
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                    {% endif %}
+                                {% else %}
+                                    <div class="attempt bad">№{{ i }}: не решена (попыток: {{ t.attempts }})</div>
+                                {% endif %}
+                            {% else %}
+                                <div class="attempt">№{{ i }}: не начата</div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+
+                </div>
+            </div>
+            {% endfor %}
+            </div>
+        {% else %}
+            <div class="no-data">Пока нет результатов</div>
+        {% endif %}
+    </div>
+
+    <!-- Сворачиваемая смена пароля -->
+    <div class="pass-toggle" onclick="document.getElementById('passForm').classList.toggle('open')">
+        &#9881; Сменить пароль
+    </div>
+    <div id="passForm" class="pass-form">
+        <input type="password" id="old_pass" placeholder="Текущий пароль">
+        <input type="password" id="new_pass" placeholder="Новый пароль">
+        <button class="btn-sm" onclick="changePassword()">Сменить</button>
+        <div id="passMsg" class="msg hidden"></div>
+    </div>
+
+</div>
+
+<script>
+/* ====== Фильтрация и сортировка ====== */
+
+// Заполнить выпадающий список групп
+var groups = new Set();
+document.querySelectorAll('.student-card').forEach(function(card) {
+    var g = card.dataset.group;
+    if (g) groups.add(g);
+});
+var groupSelect = document.getElementById('filterGroup');
+Array.from(groups).sort().forEach(function(g) {
+    var opt = document.createElement('option');
+    opt.value = g; opt.textContent = g;
+    groupSelect.appendChild(opt);
+});
+
+function applyFilters() {
+    var nameFilter = document.getElementById('filterName').value.trim().toLowerCase();
+    var groupFilter = document.getElementById('filterGroup').value;
+    var dateFilter = document.getElementById('filterDate').value;
+    var sortBy = document.getElementById('sortBy').value;
+
+    var cards = Array.from(document.querySelectorAll('.student-card'));
+    var container = document.getElementById('studentsList');
+    if (!container || cards.length === 0) return;
+
+    // Сортировка
+    cards.sort(function(a, b) {
+        if (sortBy === 'name') {
+            return a.dataset.name.localeCompare(b.dataset.name, 'ru');
+        } else if (sortBy === 'score_desc') {
+            return parseInt(b.dataset.score || 0) - parseInt(a.dataset.score || 0);
+        } else {
+            return (b.dataset.date || '').localeCompare(a.dataset.date || '');
+        }
+    });
+
+    var visible = 0;
+    cards.forEach(function(card) {
+        var name = card.dataset.name.toLowerCase();
+        var group = card.dataset.group;
+        var date = card.dataset.date;
+
+        var show = true;
+        if (nameFilter && name.indexOf(nameFilter) === -1) show = false;
+        if (groupFilter && group !== groupFilter) show = false;
+        if (dateFilter && date !== dateFilter) show = false;
+
+        card.style.display = show ? '' : 'none';
+        if (show) visible++;
+        container.appendChild(card);
+    });
+
+    document.getElementById('filterCount').textContent =
+        'Показано: ' + visible + ' из ' + cards.length;
+}
+
+function resetFilters() {
+    document.getElementById('filterName').value = '';
+    document.getElementById('filterGroup').value = '';
+    document.getElementById('filterDate').value = '';
+    document.getElementById('sortBy').value = 'date';
+    applyFilters();
+}
+
+// Показать счётчик при загрузке
+applyFilters();
+
+
+/* ====== Смена пароля ====== */
+
+async function changePassword() {
+    var oldPass = document.getElementById('old_pass').value.trim();
+    var newPass = document.getElementById('new_pass').value.trim();
+    var msgEl = document.getElementById('passMsg');
+
+    if (!oldPass || !newPass) {
+        msgEl.textContent = 'Заполните оба поля';
+        msgEl.className = 'msg msg-error';
+        msgEl.classList.remove('hidden');
+        return;
+    }
+
+    try {
+        var response = await fetch('/api/change_password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ old: oldPass, new: newPass })
+        });
+        var data = await response.json();
+        if (data.ok) {
+            msgEl.textContent = 'Пароль изменён';
+            msgEl.className = 'msg msg-success';
+            document.getElementById('old_pass').value = '';
+            document.getElementById('new_pass').value = '';
+        } else {
+            msgEl.textContent = data.error || 'Ошибка';
+            msgEl.className = 'msg msg-error';
+        }
+    } catch (err) {
+        msgEl.textContent = 'Ошибка: ' + err.message;
+        msgEl.className = 'msg msg-error';
+    }
+    msgEl.classList.remove('hidden');
+}
+</script>
+
+</body>
+</html>
