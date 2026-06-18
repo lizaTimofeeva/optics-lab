@@ -86,6 +86,64 @@ def generate_task_params():
     return params
 
 
+# === ПУЛ ВОПРОСОВ ДЛЯ ТЕСТА ===
+# Каждый вопрос: {'q': текст, 'opts': [4 варианта], 'correct': индекс правильного}
+QUESTION_POOL = [
+    {'q': 'Собирающая линза — это линза, которая:',
+     'opts': ['рассеивает параллельные лучи', 'собирает параллельные лучи в одну точку', 'отражает свет обратно', 'не изменяет ход лучей'], 'correct': 1},
+    {'q': 'В каких единицах измеряется оптическая сила линзы?',
+     'opts': ['метры', 'ньютоны', 'диоптрии', 'джоули'], 'correct': 2},
+    {'q': 'Формула тонкой линзы:',
+     'opts': ['F = d · f', '1/F = 1/d + 1/f', 'F = d + f', 'D = d / f'], 'correct': 1},
+    {'q': 'Если предмет расположен между фокусом и линзой (d < F), изображение:',
+     'opts': ['действительное, перевёрнутое, уменьшенное', 'действительное, перевёрнутое, увеличенное', 'мнимое, прямое, увеличенное', 'изображение не образуется'], 'correct': 2},
+    {'q': 'Предмет находится на расстоянии d = 0,20 м от линзы. Изображение получено на расстоянии f = 0,30 м. Чему равна оптическая сила?',
+     'opts': ['2 дптр', '5 дптр', '≈ 8,33 дптр', '10 дптр'], 'correct': 2},
+    {'q': 'Оптическая сила линзы D = 5 дптр. Чему равно фокусное расстояние F?',
+     'opts': ['0,5 м', '5 м', '0,2 м', '0,05 м'], 'correct': 2},
+    {'q': 'При каком расположении предмета собирающая линза даёт изображение, равное по размеру предмету?',
+     'opts': ['d = F', 'd = 2F', 'd < F', 'при любом d'], 'correct': 1},
+    {'q': 'Предмет расположен на расстоянии d = 2F. На каком расстоянии получится изображение?',
+     'opts': ['F', '2F', '3F', '4F'], 'correct': 1},
+    {'q': 'Увеличение линзы Г = 0,5. Это означает, что изображение:',
+     'opts': ['в 2 раза больше предмета', 'в 2 раза меньше предмета', 'равно предмету по размеру', 'мнимое'], 'correct': 1},
+    {'q': 'Расстояние от линзы до предмета d = 0,15 м, фокусное расстояние F = 0,10 м. Чему равно f?',
+     'opts': ['0,10 м', '0,20 м', '0,30 м', '0,45 м'], 'correct': 2},
+    {'q': 'Оптическая сила собирающей линзы всегда:',
+     'opts': ['отрицательна', 'положительна', 'равна нулю', 'зависит от расстояния'], 'correct': 1},
+    {'q': 'Фокус собирающей линзы — это точка, в которой:',
+     'opts': ['находится предмет', 'собираются лучи, параллельные оптической оси', 'расположена линза', 'формируется мнимое изображение'], 'correct': 1},
+    {'q': 'Если d > 2F, то изображение в собирающей линзе:',
+     'opts': ['мнимое, увеличенное', 'действительное, уменьшенное', 'действительное, равное', 'изображения нет'], 'correct': 1},
+    {'q': 'Чему равно фокусное расстояние линзы с D = 4 дптр?',
+     'opts': ['0,4 м', '4 м', '0,25 м', '0,5 м'], 'correct': 2},
+    {'q': 'Линза с фокусным расстоянием F = 0,5 м. Какова её оптическая сила?',
+     'opts': ['0,5 дптр', '5 дптр', '2 дптр', '50 дптр'], 'correct': 2},
+    {'q': 'При d = F (предмет в фокусе) собирающей линзы лучи после преломления:',
+     'opts': ['собираются в точке 2F', 'идут параллельно оптической оси', 'собираются в фокусе', 'отражаются назад'], 'correct': 1},
+    {'q': 'Какой параметр НЕ определяется в данной лабораторной работе?',
+     'opts': ['фокусное расстояние F', 'оптическая сила D', 'длина волны света', 'увеличение Г'], 'correct': 2},
+    {'q': 'Расстояние от предмета до экрана L = 0,5 м, d = 0,2 м. Чему равно f?',
+     'opts': ['0,2 м', '0,3 м', '0,5 м', '0,7 м'], 'correct': 1},
+    {'q': 'Если увеличение Г > 1, то изображение:',
+     'opts': ['уменьшенное', 'увеличенное', 'равно предмету', 'перевёрнутое'], 'correct': 1},
+    {'q': 'Единица измерения фокусного расстояния:',
+     'opts': ['диоптрии', 'ватты', 'метры', 'герцы'], 'correct': 2},
+]
+
+
+def generate_test_params():
+    """Выбирает 10 случайных вопросов из пула для ученика."""
+    indices = random.sample(range(len(QUESTION_POOL)), 10)
+    questions = []
+    correct_answers = []
+    for idx in indices:
+        q = QUESTION_POOL[idx]
+        questions.append({'q': q['q'], 'opts': q['opts']})
+        correct_answers.append(q['correct'])
+    return {'questions': questions, 'correct': correct_answers}
+
+
 def init_db():
     conn = get_db()
     cur = conn.cursor()
@@ -106,9 +164,10 @@ def init_db():
         task_params TEXT,
         created_at TIMESTAMP DEFAULT NOW()
     )""")
-    # Миграция: добавить task_params если колонки нет
+    # Миграция: добавить новые колонки если их нет
     try:
         cur.execute("ALTER TABLE students ADD COLUMN IF NOT EXISTS task_params TEXT")
+        cur.execute("ALTER TABLE students ADD COLUMN IF NOT EXISTS test_params TEXT")
     except Exception:
         conn.rollback()
     cur.execute('SELECT COUNT(*) FROM teachers')
@@ -174,20 +233,28 @@ def login():
             session['name'] = name
             session['group'] = group
             existing = query_db(
-                'SELECT id, task_params FROM students WHERE name = %s AND grp = %s',
+                'SELECT id, task_params, test_params FROM students WHERE name = %s AND grp = %s',
                 (name, group), one=True)
             if existing:
                 session['student_id'] = existing['id']
-                # Генерируем задачи если ещё нет
+                updates = []
+                vals = []
                 if not existing.get('task_params'):
-                    params = generate_task_params()
-                    query_db('UPDATE students SET task_params = %s WHERE id = %s',
-                             (json.dumps(params), existing['id']), commit=True)
+                    updates.append('task_params = %s')
+                    vals.append(json.dumps(generate_task_params()))
+                if not existing.get('test_params'):
+                    updates.append('test_params = %s')
+                    vals.append(json.dumps(generate_test_params()))
+                if updates:
+                    vals.append(existing['id'])
+                    query_db('UPDATE students SET ' + ', '.join(updates) + ' WHERE id = %s',
+                             tuple(vals), commit=True)
             else:
-                params = generate_task_params()
+                tp = json.dumps(generate_task_params())
+                tst = json.dumps(generate_test_params())
                 row = query_db(
-                    'INSERT INTO students (name, grp, task_params) VALUES (%s, %s, %s) RETURNING id',
-                    (name, group, json.dumps(params)), commit=True)
+                    'INSERT INTO students (name, grp, task_params, test_params) VALUES (%s, %s, %s, %s) RETURNING id',
+                    (name, group, tp, tst), commit=True)
                 session['student_id'] = row['id']
             return redirect('/lab')
     return render_template('login.html')
@@ -247,6 +314,26 @@ def api_calc():
     return jsonify(result)
 
 
+@app.route('/api/test_questions', methods=['GET'])
+def api_test_questions():
+    """Возвращает вопросы теста для текущего студента (без правильных ответов)"""
+    if session.get('role') != 'student':
+        return jsonify({'error': 'Доступ запрещён'}), 403
+    student_id = session.get('student_id')
+    if not student_id:
+        return jsonify({'error': 'Студент не найден'}), 400
+    row = query_db('SELECT test_params FROM students WHERE id = %s',
+                    (student_id,), one=True)
+    if not row or not row.get('test_params'):
+        tp = generate_test_params()
+        query_db('UPDATE students SET test_params = %s WHERE id = %s',
+                 (json.dumps(tp), student_id), commit=True)
+    else:
+        tp = json.loads(row['test_params'])
+    # Отдаём вопросы без правильных ответов
+    return jsonify({'questions': tp['questions']})
+
+
 @app.route('/api/test', methods=['POST'])
 def api_test():
     if session.get('role') != 'student':
@@ -255,27 +342,42 @@ def api_test():
     if not data or 'answers' not in data:
         return jsonify({'error': 'Нет ответов'}), 400
     answers = data['answers']
-    correct = [1, 2, 1, 2, 2, 2, 1, 1, 1, 2]
-    score = 0
-    for i in range(10):
-        if i < len(answers) and answers[i] == correct[i]:
-            score += 1
+
     student_id = session.get('student_id')
-    if student_id:
-        row = query_db('SELECT test_answers FROM students WHERE id = %s',
-                        (student_id,), one=True)
-        history = []
-        if row and row['test_answers']:
-            try:
-                old = json.loads(row['test_answers'])
-                history = old if isinstance(old, list) and len(old) > 0 \
-                    and isinstance(old[0], dict) else []
-            except Exception:
-                pass
-        history.append({'score': score, 'answers': answers})
-        query_db('UPDATE students SET test_score = %s, test_answers = %s WHERE id = %s',
-                 (score, json.dumps(history), student_id), commit=True)
-    return jsonify({'score': score, 'total': 10, 'correct': correct})
+    if not student_id:
+        return jsonify({'error': 'Студент не найден'}), 400
+
+    # Берём правильные ответы из параметров студента
+    row = query_db('SELECT test_params, test_answers FROM students WHERE id = %s',
+                    (student_id,), one=True)
+    if not row or not row.get('test_params'):
+        return jsonify({'error': 'Вопросы не найдены'}), 400
+
+    tp = json.loads(row['test_params'])
+    correct = tp['correct']
+
+    score = 0
+    results = []  # True/False для каждого вопроса
+    for i in range(10):
+        ok = i < len(answers) and answers[i] == correct[i]
+        if ok:
+            score += 1
+        results.append(ok)
+
+    # Сохраняем историю попыток
+    history = []
+    if row.get('test_answers'):
+        try:
+            old = json.loads(row['test_answers'])
+            history = old if isinstance(old, list) and len(old) > 0 \
+                and isinstance(old[0], dict) else []
+        except Exception:
+            pass
+    history.append({'score': score, 'answers': answers})
+    query_db('UPDATE students SET test_score = %s, test_answers = %s WHERE id = %s',
+             (score, json.dumps(history), student_id), commit=True)
+    # Возвращаем только правильно/неправильно, БЕЗ правильных ответов
+    return jsonify({'score': score, 'total': 10, 'results': results})
 
 
 @app.route('/api/task_params', methods=['GET'])
@@ -370,6 +472,19 @@ def api_change_password():
         return jsonify({'error': 'Неверный текущий пароль'}), 400
     query_db('UPDATE teachers SET password = %s WHERE id = %s',
              (new_pass, teacher_id), commit=True)
+    return jsonify({'ok': True})
+
+
+@app.route('/api/delete_student', methods=['POST'])
+def api_delete_student():
+    """Удаляет ученика из БД (только для преподавателя)"""
+    if session.get('role') != 'teacher':
+        return jsonify({'error': 'Доступ запрещён'}), 403
+    data = request.get_json()
+    if not data or 'student_id' not in data:
+        return jsonify({'error': 'Не указан id ученика'}), 400
+    student_id = int(data['student_id'])
+    query_db('DELETE FROM students WHERE id = %s', (student_id,), commit=True)
     return jsonify({'ok': True})
 
 

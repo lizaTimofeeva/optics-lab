@@ -89,6 +89,35 @@
         .attempt.hint { border-left-color: #f59e0b; }
         .task-values { color: #94a3b8; font-size: 0.8rem; margin-left: 0.3rem; }
 
+        /* === КНОПКА УДАЛЕНИЯ === */
+        .delete-btn {
+            background: none; border: 1px solid #fecaca; color: #dc2626;
+            border-radius: 6px; padding: 0.3rem 0.6rem; font-size: 0.8rem;
+            cursor: pointer; transition: all 0.2s; margin-left: 0.5rem;
+        }
+        .delete-btn:hover { background: #fef2f2; border-color: #dc2626; }
+
+        .confirm-overlay {
+            display: none; position: fixed; inset: 0; z-index: 100;
+            background: rgba(0,0,0,0.4); align-items: center; justify-content: center;
+        }
+        .confirm-overlay.show { display: flex; }
+        .confirm-box {
+            background: white; border-radius: 12px; padding: 1.5rem; max-width: 360px;
+            width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.2); text-align: center;
+        }
+        .confirm-box h3 { color: #1e3a5f; margin-bottom: 0.5rem; }
+        .confirm-box p { color: #64748b; font-size: 0.9rem; margin-bottom: 1.2rem; }
+        .confirm-btns { display: flex; gap: 0.5rem; }
+        .confirm-btns button {
+            flex: 1; padding: 0.6rem; border-radius: 8px; font-size: 0.9rem;
+            font-weight: 600; cursor: pointer; transition: all 0.2s;
+        }
+        .btn-cancel { background: #f1f5f9; border: 1px solid #e2e8f0; color: #64748b; }
+        .btn-cancel:hover { background: #e2e8f0; }
+        .btn-danger { background: #dc2626; border: none; color: white; }
+        .btn-danger:hover { background: #b91c1c; }
+
         /* === СВОРАЧИВАЕМЫЙ ПАРОЛЬ === */
         .pass-toggle {
             color: #64748b; cursor: pointer; font-size: 0.9rem;
@@ -130,6 +159,18 @@
     <div class="user-info">
         {{ name }}
         <a href="/logout">Выйти</a>
+    </div>
+</div>
+
+<!-- Диалог подтверждения удаления -->
+<div class="confirm-overlay" id="deleteOverlay">
+    <div class="confirm-box">
+        <h3>Удалить ученика?</h3>
+        <p id="deleteMsg">Запись будет удалена из базы данных безвозвратно.</p>
+        <div class="confirm-btns">
+            <button class="btn-cancel" onclick="closeDeleteDialog()">Отмена</button>
+            <button class="btn-danger" onclick="confirmDelete()">Удалить</button>
+        </div>
     </div>
 </div>
 
@@ -190,6 +231,7 @@
             {% endfor %}
 
             <div class="student-card"
+                 data-id="{{ s['id'] }}"
                  data-name="{{ s['name'] }}"
                  data-group="{{ s['grp'] }}"
                  data-date="{{ s['created_at'].strftime('%Y-%m-%d') if s['created_at'] else '' }}"
@@ -202,7 +244,10 @@
                         <span class="student-group">| {{ s['grp'] }}</span>
                         <span class="student-date">{{ s['created_at'].strftime('%d.%m.%Y %H:%M') if s['created_at'] else '' }}</span>
                     </div>
-                    <span class="student-score">{{ test_pts + task_pts[0] }} / 20</span>
+                    <div style="display:flex;align-items:center;gap:0.5rem;" onclick="event.stopPropagation()">
+                        <span class="student-score">{{ test_pts + task_pts[0] }} / 20</span>
+                        <button class="delete-btn" onclick="openDeleteDialog({{ s['id'] }}, '{{ s['name'] }}')">&#128465; Удалить</button>
+                    </div>
                 </div>
 
                 <div class="student-details" onclick="event.stopPropagation()">
@@ -375,6 +420,45 @@ function resetFilters() {
 
 // Показать счётчик при загрузке
 applyFilters();
+
+
+/* ====== Удаление ученика ====== */
+var deleteStudentId = null;
+
+function openDeleteDialog(id, name) {
+    deleteStudentId = id;
+    document.getElementById('deleteMsg').textContent =
+        'Удалить ученика «' + name + '»? Запись будет удалена из базы данных безвозвратно.';
+    document.getElementById('deleteOverlay').classList.add('show');
+}
+
+function closeDeleteDialog() {
+    deleteStudentId = null;
+    document.getElementById('deleteOverlay').classList.remove('show');
+}
+
+async function confirmDelete() {
+    if (!deleteStudentId) return;
+    try {
+        var response = await fetch('/api/delete_student', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ student_id: deleteStudentId })
+        });
+        var data = await response.json();
+        if (data.ok) {
+            /* Убираем карточку из DOM */
+            var card = document.querySelector('.student-card[data-id="' + deleteStudentId + '"]');
+            if (card) card.remove();
+            applyFilters();
+        } else {
+            alert('Ошибка: ' + (data.error || 'Не удалось удалить'));
+        }
+    } catch (err) {
+        alert('Ошибка: ' + err.message);
+    }
+    closeDeleteDialog();
+}
 
 
 /* ====== Смена пароля ====== */
